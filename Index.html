@@ -10,7 +10,7 @@
   <div class="container">
     <h1>Car Resale Value Prediction</h1>
     <form id="predictionForm">
-      <label for="make">Car Name:</label>
+      <label for="make">Company :</label>
       <input type="text" id="make" name="make" required>
 
       <label for="model">Year:</label>
@@ -22,23 +22,17 @@
       <label for="fuelType">Fuel Type:</label>
       <input type="text" id="fuelType" name="fuelType" required>
 
-      <label for="sellerType">Seller Type:</label>
-      <input type="text" id="sellerType" name="sellerType" required>
-
       <label for="transmission">Transmission:</label>
       <input type="text" id="transmission" name="transmission" required>
 
       <label for="owner">Owner:</label>
       <input type="text" id="owner" name="owner" required>
 
-      <label for="engine">Engine:</label>
+      <label for="engine">Mileage:</label>
       <input type="number" id="engine" name="engine" min="0" required>
 
-      <label for="maxPower">Max Power:</label>
+      <label for="maxPower">Engine:</label>
       <input type="number" id="maxPower" name="maxPower" min="0" required>
-
-      <label for="torque">Torque:</label>
-      <input type="number" id="torque" name="torque" min="0" required>
 
       <label for="seats">Seats:</label>
       <input type="number" id="seats" name="seats" min="1" required>
@@ -50,6 +44,8 @@
     </form>
     <div id="predictionResult"></div>
   </div>
+  <div id="predictionResult"></div>
+</div>
 
   <script src="scripts.js"></script>
 </body>
