@@ -21,7 +21,7 @@ def main():
     st.title('Car Price Prediction')
 
     st.write('## Enter Car Details:')
-    company_name = st.text_input('Company Name')
+    car_company_name = st.text_input('Company Name')
     year = st.selectbox('Year', list(range(1983, 2021)))
     km_driven = st.number_input('Kilometers Driven', step=1)
     fuel = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG', 'LPG'])
@@ -30,12 +30,13 @@ def main():
     mileage = st.number_input('Mileage', step=None)
     engine = st.number_input('Engine', step=None)
     seats = st.selectbox('Seats', [2, 4, 5, 6, 7, 8, 9, 10, 14])
+    max_power = st.number_input('Max Power', step=None)
 
     # Check if all fields are filled
-    if st.button('Predict') and company_name and year and km_driven and fuel and transmission and owner and mileage and engine and seats:
+    if st.button('Predict') and car_company_name and year and km_driven and fuel and transmission and owner and mileage and engine and seats:
         # Create a dictionary from user inputs
         user_data = {
-            'company_name': company_name,
+            'car_company_name': car_company_name,
             'year': year,
             'km_driven': km_driven,
             'fuel': fuel,
@@ -43,16 +44,13 @@ def main():
             'owner': owner,
             'mileage': mileage,
             'engine': engine,
-            'seats': seats
+            'seats': seats,
+            'max_power': max_power
         }
 
         # Make API request to get predictions
         prediction = make_prediction(user_data)
-
-        if prediction is not None:
-            # Display predictions
-            st.write('## Predicted Price')
-            st.write(f'Estimated Price: ${prediction["predicted_price"]:,.2f}')
+        print(prediction)
 
     # Add file uploader to the app
     uploaded_file = st.file_uploader('Or Upload CSV file for prediction (if preferred):', type=['csv'])
@@ -62,7 +60,7 @@ def main():
         df_new = pd.read_csv(uploaded_file)
 
         # Prepare data for API request
-        api_data = df_new[['company_name','year', 'km_driven','fuel','transmission','owner', 'mileage', 'engine', 'seats']].to_dict(orient='records')
+        api_data = df_new[['car_company_name','year', 'km_driven','fuel','transmission','owner', 'mileage', 'engine', 'seats', 'max_power']].to_dict(orient='records')
 
         # Make API request to get predictions for each row
         predictions = [make_prediction(row) for row in api_data]
