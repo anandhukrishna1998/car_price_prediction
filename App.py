@@ -1,26 +1,22 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+import requests
 
-# Define a function to train the model
-def train_model():
-    # Load the dataset (replace this with your own dataset loading code)
-    df = pd.read_csv('modified_car_details.csv')
+# Define a function to make predictions using the API endpoint
+def make_prediction(data):
+    # API endpoint URL for prediction
+    api_url = 'http://34.125.23.232:5001/predict/'
 
-    # Preprocess the data (replace this with your own preprocessing code)
-    X = df[['company_name','year', 'km_driven','fuel','transmission','owner', 'mileage', 'engine', 'seats']]
-    y = df['price']
+    try:
+        # Send POST request to the API endpoint with user data
+        response = requests.post(api_url, json=data)
+        prediction = response.json()  # Get the prediction from the response
 
-    # Train a linear regression model
-    model = LinearRegression()
-    model.fit(X, y)
+        return prediction
+    except Exception as e:
+        st.error(f"Error making prediction: {e}")
+        return None
 
-    return model
-
-# Define the Streamlit app
-# Define the Streamlit app
 def main():
     st.title('Car Price Prediction')
 
@@ -35,31 +31,28 @@ def main():
     engine = st.number_input('Engine', step=None)
     seats = st.selectbox('Seats', [2, 4, 5, 6, 7, 8, 9, 10, 14])
 
-
     # Check if all fields are filled
     if st.button('Predict') and company_name and year and km_driven and fuel and transmission and owner and mileage and engine and seats:
-        # Create a DataFrame from user inputs
-        user_data = pd.DataFrame({
-            'company_name' : [company_name],
-            'year': [year],
-            'km_driven': [km_driven],
-            'fuel' : [fuel],
-            'transmission' : [transmission],
-            'owner' : [owner],
-            'mileage': [mileage],
-            'engine': [engine],
-            'seats': [seats]
-        })
+        # Create a dictionary from user inputs
+        user_data = {
+            'company_name': company_name,
+            'year': year,
+            'km_driven': km_driven,
+            'fuel': fuel,
+            'transmission': transmission,
+            'owner': owner,
+            'mileage': mileage,
+            'engine': engine,
+            'seats': seats
+        }
 
-        # Train the model
-        model = train_model()
+        # Make API request to get predictions
+        prediction = make_prediction(user_data)
 
-        # Make predictions
-        prediction = model.predict(user_data)
-
-        # Display predictions
-        st.write('## Predicted Price')
-        st.write(f'Estimated Price: ${prediction[0]:,.2f}')
+        if prediction is not None:
+            # Display predictions
+            st.write('## Predicted Price')
+            st.write(f'Estimated Price: ${prediction["predicted_price"]:,.2f}')
 
     # Add file uploader to the app
     uploaded_file = st.file_uploader('Or Upload CSV file for prediction (if preferred):', type=['csv'])
@@ -68,15 +61,15 @@ def main():
         # Load the uploaded CSV file
         df_new = pd.read_csv(uploaded_file)
 
-        # Train the model
-        model = train_model()
+        # Prepare data for API request
+        api_data = df_new[['company_name','year', 'km_driven','fuel','transmission','owner', 'mileage', 'engine', 'seats']].to_dict(orient='records')
 
-        # Make predictions
-        predictions = model.predict(df_new[['company_name','year', 'km_driven','fuel','transmission','owner', 'mileage', 'engine', 'seats']])
+        # Make API request to get predictions for each row
+        predictions = [make_prediction(row) for row in api_data]
 
         # Display predictions
         st.write('## Predictions from CSV file')
-        st.write(pd.DataFrame({'Predicted Price': predictions}))
+        st.write(pd.DataFrame({'Predicted Price': [pred["predicted_price"] for pred in predictions]}))
 
     # Button for past predictions
     if st.button('View Past Predictions'):
