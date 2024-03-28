@@ -134,7 +134,7 @@ def main():
         else:
             st.write("Please upload a CSV file to proceed.")
 
-    st.title('Get Last Predicitions')
+    st.title('Get Last Predictions')
 
     start_date = st.date_input("Start Date", datetime.date.today() - datetime.timedelta(days=30))
     end_date = st.date_input("End Date", datetime.date.today())
