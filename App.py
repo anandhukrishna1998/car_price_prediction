@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import datetime
-
+import json 
 # Set the API base URL as a global variable
 API_BASE_URL = 'http://34.125.23.232:5001'
 st.set_page_config(layout="wide")
@@ -48,70 +48,79 @@ def upload_file(file):
         st.error(f"Error uploading file: {e}")
         return None
     
-# Define a function to make predictions using the API endpoint
-def make_prediction(data):
-    # API endpoint URL for prediction
-    api_url = f'{API_BASE_URL}/predict/'
-
-    try:
-        # Send POST request to the API endpoint with user data
-        response = requests.post(api_url, json=data)
-        prediction = response.json()  # Get the prediction from the response
-
-        return prediction
-    except Exception as e:
-        st.error(f"Error making prediction: {e}")
-        return None
 
 def main():
-    st.title('Car Price Prediction')
+        # Streamlit app layout
+    st.title('Vehicle Price Prediction')
 
-    st.write('## Enter Car Details:')
-    car_company_name = st.text_input('Company Name')
-    year = st.selectbox('Year', list(range(1983, 2021)))
-    km_driven = st.number_input('Kilometers Driven', step=1)
-    fuel = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG', 'LPG'])
-    transmission = st.selectbox('Transmission', ['Manual', 'Automatic'])
-    owner = st.selectbox('Owner', ['First Owner', 'Second Owner', 'Third Owner', 'Fourth and Above Owner', 'Test Drive Car'])
-    mileage = st.number_input('Mileage (in kmpl)', step=0.1, format='%f')
-    engine = st.number_input('Engine (in cc)', step=1)
-    seats = st.selectbox('Seats', [2, 4, 5, 6, 7, 8, 9, 10, 14])
-    max_power = st.number_input('Max Power (in bhp)', step=0.1, format='%f')
+    # Form for user input
+    with st.form(key='vehicle_form'):
+        year = st.number_input('Year', min_value=1980, max_value=2024, step=1)
+        km_driven = st.number_input('Kilometers Driven', min_value=0)
+        seats = st.number_input('Seats', min_value=1, max_value=10, step=1)
+        mileage = st.number_input('Mileage (km/l)')
+        engine = st.number_input('Engine (CC)')
+        max_power = st.number_input('Max Power (bhp)')
+        car_company_name = st.text_input('Car Company Name')
+        fuel = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG', 'LPG', 'Electric'])
+        transmission = st.selectbox('Transmission', ['Manual', 'Automatic'])
+        owner = st.selectbox('Owner Type', ['First', 'Second', 'Third', 'Fourth & Above'])
+        
+        submit_button = st.form_submit_button(label='Predict Price')
 
-    if st.button('Predict'):
-        if car_company_name and year and km_driven and fuel and transmission and owner and mileage and engine and seats and max_power:
-            user_data = {
-                'car_company_name': car_company_name,
-                'year': year,
-                'km_driven': km_driven,
-                'fuel': fuel,
-                'transmission': transmission,
-                'owner': owner,
-                'mileage': mileage,
-                'engine': engine,
-                'seats': seats,
-                'max_power': max_power
-            }
+    # POST request to the endpoint
+    if submit_button:
+        vehicle_data = {
+            "year": year,
+            "km_driven": km_driven,
+            "seats": seats,
+            "mileage": mileage,
+            "engine": engine,
+            "max_power": max_power,
+            "car_company_name": car_company_name,
+            "fuel": fuel,
+            "transmission": transmission,
+            "owner": owner
+        }
 
-            prediction = make_prediction(user_data)
-            if prediction:
-                # Assuming 'predicted_price' is the key for the prediction result
-                predicted_price = prediction.get("predicted_price", "Prediction not available")
-                # Append the prediction to the user_data or create a new dict for display
-                display_data = user_data.copy()  # Copy to not alter the original user_data
-                display_data['Predicted Price'] = predicted_price
-                
-                # Convert to DataFrame for display, turning the dictionary into a two-column DataFrame
-                display_df = pd.DataFrame(list(display_data.items()), columns=['Feature', 'Value'])
-                
-                # Display the DataFrame in Streamlit
-                st.write('## Prediction Result')
-                st.dataframe(display_df)
-            else:
-                st.write("No prediction was made. Please check your input data.")
+        # The server expects a form field named 'vehicle_data' with a JSON string as its value
+        form_data = {
+            'vehicle_data': json.dumps(vehicle_data),  # Convert dict to JSON string
+        }
+
+        # Endpoint URL
+        api_url = f'{API_BASE_URL}/predict/'
+
+        # Making the POST request with form data
+        response = requests.post(api_url, data=form_data)  # Note the use of 'data' instead of 'files'
+        
+        if response.status_code == 200:
+            # Displaying the prediction result
+            prediction = response.json()
+           
+
+            # Assuming form_data.get('vehicle_data') returns a JSON string of vehicle_data
+            vehicle_data_json_str = form_data.get('vehicle_data')
+
+            # Convert JSON string back to dictionary
+            vehicle_data_dict = json.loads(vehicle_data_json_str)
+
+            # Convert the dictionary to a DataFrame
+            # Since the dictionary represents a single record, you need to wrap it in a list to create a DataFrame
+            display_data = pd.DataFrame([vehicle_data_dict])
+            print('display_data is ', display_data) # Copy to not alter the original user_data
+            display_data['Predicted Price'] = prediction.get("predicted_price")
+            
+            # Convert to DataFrame for display, turning the dictionary into a two-column DataFrame
+            #display_df = pd.DataFrame(list(display_data.items()), columns=['Feature', 'Value'])
+            
+            # Display the DataFrame in Streamlit
+            st.write('## Prediction Result')
+            st.dataframe(display_data)
+            #st.success(f'Predicted Vehicle Price: {prediction.get("predicted_price")}')
         else:
-            st.error("Please fill in all the fields to make a prediction.")
-
+            # Displaying error message
+            st.error(f'Failed to predict price. Error: {response.text}')
 
     st.title('Upload file for prediction ')
 
@@ -134,18 +143,23 @@ def main():
         else:
             st.write("Please upload a CSV file to proceed.")
 
-    st.title('Get Last Predictions')
+    st.title('Past predictions ')
 
     start_date = st.date_input("Start Date", datetime.date.today() - datetime.timedelta(days=30))
     end_date = st.date_input("End Date", datetime.date.today())
 
     if st.button('Fetch Past Predictions'):
         past_predictions = fetch_past_predictions(start_date, end_date)
+        
         if past_predictions:
-            
             # Convert the list of dictionaries to a DataFrame for display
             past_predictions_df = pd.DataFrame(past_predictions)
-            st.write(past_predictions_df)
+            
+            st.write("The length of the dataframe is ", len(past_predictions_df))
+            st.dataframe(past_predictions_df.head(20))
+
+
+
 
 if __name__ == '__main__':
     main()

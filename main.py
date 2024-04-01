@@ -36,64 +36,6 @@ app = FastAPI(title="Car Price Prediction",
               description=" Swagger at 5001 and Sqlalchemy orm used" )
 models.Base.metadata.create_all(bind=engine)
 
-# @app.post("/predict/")
-# async def upload(vehicle_data: Optional[schemas.VehicleCreate] = None,db: Session = Depends(get_db)):
-    
-#     try:
-        
-        
-#         if vehicle_data:
-#             vehicle_dict = vehicle_data.dict()
-#             df = pd.DataFrame([vehicle_dict])
-#             predictions = make_predictions(df)
-#             today = pd.to_datetime('today').date()
-#             df['predicted_price'] = predictions
-#             df['timestamp'] = today
-#             df.to_sql('car_details', engine, if_exists='append', index=False)
-#             predicted_price_str = str(predictions[0])
-#             print(predicted_price_str)
-#             return {"predicted_price": predicted_price_str}
-#         else:
-#             raise HTTPException(status_code=400, detail="No input data provided.")
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
-#         raise HTTPException(status_code=500, detail="An error occurred during prediction.")
-
-
-
-
-
-# @app.post("/file/")
-# async def upload_csv(file: UploadFile = File(...),db: Session = Depends(get_db)):
-#     if not file.filename.endswith('.csv'):
-#         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
-    
-#     try:
-#         # Read the contents of the uploaded CSV file
-#         contents = await file.read()
-#         df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
-#         predictions = make_predictions(df)
-#         today = pd.to_datetime('today').date()
-#         df['predicted_price'] = predictions
-#         df['timestamp'] = today
-#         print(df.head())
-#         df =df[["year", "km_driven",
-#                       "seats", "mileage", "engine",
-#                       "max_power","car_company_name",
-#                         "fuel", 
-#                         "transmission", "owner","predicted_price","timestamp"]]
-#         df.to_sql('car_details', engine, if_exists='append', index=False)
-#         df['timestamp'] = df['timestamp'].astype(str) 
-
-#         # Convert DataFrame to dictionary for JSON response
-#         df_dict = df.to_dict(orient='records')  # Convert the first few rows to a list of dictionaries
-
-#         # Return JSON response with the data
-#         return JSONResponse(content={"data": df_dict})
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"An error occurred while processing the file: {str(e)}")
-#     finally:
-#         await file.close()
 
 @app.get("/past-predictions")
 async def past_predictions(
