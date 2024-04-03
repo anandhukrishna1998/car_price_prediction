@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> b3f29431325511321db5acdde1589369985d0e77
 # Welcome to Great Expectations! Always know what to expect from your data.
 #
 # Here you can define datasources, batch kwargs generators, integrations and
@@ -9,7 +12,11 @@
 
 # config_version refers to the syntactic version of this config file, and is used in maintaining backwards compatibility
 # It is auto-generated and usually does not need to be changed.
+<<<<<<< HEAD
 config_version: 3
+=======
+config_version: 3.0
+>>>>>>> b3f29431325511321db5acdde1589369985d0e77
 
 # Datasources tell Great Expectations where your data lives and how to get it.
 # Read more at https://docs.greatexpectations.io/docs/guides/connecting_to_your_data/connect_to_data_overview
@@ -60,10 +67,14 @@ stores:
       base_directory: uncommitted/validations/
 
   evaluation_parameter_store:
+<<<<<<< HEAD
     # Evaluation Parameters enable dynamic expectations. Read more here:
     # https://docs.greatexpectations.io/docs/reference/evaluation_parameters/
     class_name: EvaluationParameterStore
 
+=======
+    class_name: EvaluationParameterStore
+>>>>>>> b3f29431325511321db5acdde1589369985d0e77
   checkpoint_store:
     class_name: CheckpointStore
     store_backend:
@@ -90,6 +101,7 @@ data_docs_sites:
   # profiles from the uncommitted directory. Read more at https://docs.greatexpectations.io/docs/terms/data_docs
   local_site:
     class_name: SiteBuilder
+<<<<<<< HEAD
     # set to false to hide how-to buttons in Data Docs
     show_how_to_buttons: true
     store_backend:
@@ -100,3 +112,20 @@ data_docs_sites:
 
 anonymous_usage_statistics:
   enabled: True
+=======
+    show_how_to_buttons: true
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+
+anonymous_usage_statistics:
+  data_context_id: 306c296d-cc75-4341-98f6-36fc54a2a73b
+  enabled: true
+notebooks:
+include_rendered_content:
+  globally: false
+  expectation_suite: false
+  expectation_validation_result: false
+>>>>>>> b3f29431325511321db5acdde1589369985d0e77

@@ -6,7 +6,7 @@ from . import models, schemas
 
 
 class CarDetailsRepo:
-    def create(db: Session, segement: schemas.car_details):
+    def create(db: Session, segement: schemas.Cardetails):
         db_item = models.vehicle_details(year=segement.year, 
                                             km_driven=segement.km_driven,
                                             seats=segement.seats,
@@ -25,7 +25,7 @@ class CarDetailsRepo:
         db.refresh(db_item)
         return db_item
 
-    def get_by_date_range(db: Session, start_date: date, end_date: date) -> List[schemas.car_details]:
+    def get_by_date_range(db: Session, start_date: date, end_date: date) -> List[schemas.Cardetails]:
         start_datetime = datetime.combine(start_date, datetime.min.time())
         end_datetime = datetime.combine(end_date, datetime.max.time())
         return db.query(models.vehicle_details).filter(
