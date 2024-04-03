@@ -19,7 +19,7 @@ Car Price Prediction is a machine learning project that aims to predict the pric
 - Data preprocessing and cleaning techniques.
 - Building and evaluating machine learning models for regression tasks.
 - Deployment of the trained model for prediction.
-- Streamlid for UI
+- Streamlit for UI
 - Fast API for backend 
 - PostgreSQL storing Prediction Results
 - Airflow for data ingestion pipeline 
@@ -30,7 +30,7 @@ Car Price Prediction is a machine learning project that aims to predict the pric
 Follow these steps to use the project:
 
 1. Prepare your dataset or use the provided example dataset.
-2. Explore the Jupyter Notebook provided (`Car_Price_Prediction.ipynb`) to understand the workflow and code.
+2. Explore the Jupyter Notebook provided (`model-industrialization-final`) to understand the workflow and code.
 3. Train the machine learning models using the provided notebook or scripts.
 4. Use the trained models for predicting car prices based on input features.
 
