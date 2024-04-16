@@ -1,13 +1,10 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime,Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Float, DateTime
 import datetime
 from db import Base
-from sqlalchemy.dialects.mysql import LONGTEXT
-from pydantic import BaseModel
 
 
 class vehicle_details(Base):
-    __tablename__ = 'car_details'
+    __tablename__ = "car_details"
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     year = Column(Integer, nullable=True, unique=False)
@@ -21,5 +18,4 @@ class vehicle_details(Base):
     transmission = Column(String(80), nullable=False, unique=False)
     owner = Column(String(80), nullable=False, unique=False)
     predicted_price = Column(Float, nullable=True, unique=False)
-    
-
+    source = Column(String(80), nullable=False, unique=False)
