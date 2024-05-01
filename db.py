@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from urllib.parse import quote  
 
 
 SQLALCHEMY_DATABASE_URL = "postgresql://car:password@34.125.23.232/carprice"

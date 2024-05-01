@@ -7,11 +7,6 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 def clean_and_fill_data(data: pd.DataFrame) -> pd.DataFrame:
 
-    # data["engine"] = data["engine"].str.extract('([^\s]+)').astype("float")
-    # data["mileage"] = data["mileage"].str.extract('([^\s]+)').astype("float")
-    # data["max_power"] = data["max_power"].str.extract('([^\s]+)')
-    # data["max_power"] = data["max_power"][~(data["max_power"] == "bhp")]
-    # data["max_power"] = data["max_power"].astype("float")
     numerical_cols = data.select_dtypes(include=[np.number]).columns.tolist()
     categorical_cols = data.select_dtypes(exclude=[np.number]).columns.tolist()
     for col in numerical_cols:

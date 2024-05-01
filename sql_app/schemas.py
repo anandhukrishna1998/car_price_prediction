@@ -1,4 +1,3 @@
-from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -14,7 +13,7 @@ class VehicleCreate(BaseModel):
     engine: int
     seats: int
     max_power: float
-    
+
 
 class Cardetails(BaseModel):
     timestamp: datetime
@@ -29,8 +28,8 @@ class Cardetails(BaseModel):
     transmission: str
     owner: str
     predicted_price: float
+    source: str
+
 
 class Config:
-        orm_mode = True
-    
-
+    orm_mode = True
