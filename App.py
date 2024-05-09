@@ -5,7 +5,7 @@ import datetime
 import json
 
 # Set the API base URL as a global variable
-API_BASE_URL = "http://34.125.23.232:5001"
+API_BASE_URL = "http://34.16.139.133:5001"
 st.set_page_config(layout="wide")
 
 
