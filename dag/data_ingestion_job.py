@@ -7,18 +7,13 @@ from airflow.operators.python_operator import PythonOperator
 import datetime
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData
 from sqlalchemy.exc import SQLAlchemyError
-import great_expectations as ge
 import requests
 import json
 from great_expectations.dataset.pandas_dataset import PandasDataset
 from great_expectations.data_context.data_context import DataContext
 from airflow.operators.python import BranchPythonOperator
-from sqlalchemy import String
-import hashlib
-from great_expectations.data_context import DataContext
 from great_expectations.core.batch import BatchRequest
 import time
-import os
 from sqlalchemy import DateTime, JSON
 
 # Define the global path variable
@@ -38,7 +33,7 @@ def read_data(**kwargs):
     selected_file = random.choice(files)
     file_path = os.path.join(RAW_DATA_PATH, selected_file)
     # file_path = (
-    #     "/home/sachin/DSP/airflow-spike-master/input_data/raw-data/data_chunk_52.csv"
+    #     "/home/sachin/DSP/airflow-spike-master/input_data/raw-data/data_chunk_20.csv"
     # )
     print("file_path in   read_datais ", file_path)
     kwargs["ti"].xcom_push(key="file_path", value=file_path)
@@ -77,6 +72,7 @@ def validate_data(**kwargs):
     if validation_results["success"]:
         print(file_path, "is good data")
         kwargs["ti"].xcom_push(key="data_quality", value="good_data")
+        return "save_file"
     else:
         print(file_path, "is bad data")
         kwargs["ti"].xcom_push(key="data_quality", value="bad_data")
@@ -109,16 +105,6 @@ def validate_data(**kwargs):
         context.build_data_docs()
         data_docs_site = context.get_docs_sites_urls()[0]["site_url"]
         print(f"Data Docs generated at: {data_docs_site}")
-
-    pass
-
-
-def decide_which_path(**kwargs):
-    ti = kwargs["ti"]
-    data_quality = ti.xcom_pull(task_ids="validate_data", key="data_quality")
-    if data_quality == "good_data":
-        return "save_file"
-    else:
         return ["send_alerts", "save_data_errors", "save_file"]
 
 
@@ -131,16 +117,28 @@ def send_alerts(**kwargs):
     df = pd.read_csv(file_path)
 
     failed_expectations = [
-        result for result in validation_results["results"] if not result["success"]
+        result
+        for result in validation_results["results"]
+        if not result["success"]
     ]
+    print('validation_results is ', validation_results)
+    print('failed_expectations is ', failed_expectations)
     total_failed_count = len(failed_expectations)
     error_summary = os.linesep.join(
         [
-            f"- Expectation {index + 1}: {expectation['expectation_config']['expectation_type']} failed with {expectation['result']['unexpected_count']} unexpected values."
+            f"- Expectation {index + 1}: "
+            f"{expectation['expectation_config']['expectation_type']} "
+            f"failed with "
+            f"{expectation['result'].get('unexpected_count', 'no')} "
+            f"unexpected values. "
             for index, expectation in enumerate(failed_expectations)
         ]
     )
-    teams_webhook_url = "https://epitafr.webhook.office.com/webhookb2/66c8b7ae-6477-4603-9a5b-49d5f2191a91@3534b3d7-316c-4bc9-9ede-605c860f49d2/IncomingWebhook/f76d2dd16d7e44189ed49093915d8360/4981d105-4c57-4ae4-ac72-2623b4a8b6b8"
+    teams_webhook_url = (
+        "https://epitafr.webhook.office.com/webhookb2/66c8b7ae-6477-4603-9a5b-"
+        "49d5f2191a91@3534b3d7-316c-4bc9-9ede-605c860f49d2/IncomingWebhook/"
+        "f76d2dd16d7e44189ed49093915d8360/4981d105-4c57-4ae4-ac72-2623b4a8b6b8"
+    )
     headers = {"Content-Type": "application/json"}
 
     bad_rows_indices = set()
@@ -152,15 +150,22 @@ def send_alerts(**kwargs):
                 "partial_unexpected_list" in result["result"]
                 and result["result"]["partial_unexpected_list"]
             ):
-                # Assume partial_unexpected_list contains the row indices (this might need adjustment based on actual data structure)
+                '''Assume partial_unexpected_list contains the row indices
+                (this might need adjustment based on actual data structure)'''
                 for value in result["result"]["partial_unexpected_list"]:
-                    # Find all occurrences of this unexpected value in the specified column
-                    index_list = df.index[
-                        df[result["expectation_config"]["kwargs"]["column"]] == value
-                    ].tolist()
+                    ''' Find all occurrences of this unexpected
+                    value in the specified column'''
+                    column = result["expectation_config"]["kwargs"]["column"]
+                    condition = df[column] == value
+                    index_list = df.index[condition].tolist()
+
                     bad_rows_indices.update(index_list)
     bad_rows_indices_len = len(bad_rows_indices)
-    kwargs["ti"].xcom_push(key="bad_rows_indices_len", value=bad_rows_indices_len)
+    kwargs["ti"].xcom_push(
+        key="bad_rows_indices_len",
+        value=bad_rows_indices_len
+        )
+
     if bad_rows_indices_len > 5:
         criticality = "high"
     elif bad_rows_indices_len > 3:
@@ -170,8 +175,20 @@ def send_alerts(**kwargs):
 
     kwargs["ti"].xcom_push(key="criticality", value=criticality)
     alert_message = {
-        "text": f"Data Problem Alert (Run ID: {run_id} look at this run id in the datadocs):\n\n filepath is : {file_path}\n\nCriticality: {criticality}\n\n Number of failed rows :{len(bad_rows_indices)}\n\nSummary: {total_failed_count} expectations failed validation.\n\nError Details:\n\n{error_summary}\n\nCheck the detailed report here: [Data Docs](http://34.16.139.133:8000/index.html)"
+        "text": (
+            f"Data Problem Alert (Run ID: {run_id} look at this run id "
+            f"in the datadocs):\n\n "
+            f"filepath is: {file_path}\n\n "
+            f"Criticality: {criticality}\n\n "
+            f"Number of failed rows: {len(bad_rows_indices)}\n\n "
+            f"Summary: {total_failed_count} expectations "
+            f"failed validation.\n\n "
+            f"Error Details:\n\n{error_summary}\n\n "
+            f"Check the detailed report here: [Data Docs] "
+            f"(http://34.16.139.133:8000/index.html) "
+        )
     }
+
     print("alert_message is", alert_message)
 
     try:
@@ -180,22 +197,10 @@ def send_alerts(**kwargs):
         if response.status_code == 200:
             print("Alert sent to Teams successfully.")
         else:
-            print(f"Failed to send alert to Teams.Status code: {response.status_code}")
+            print(f"Failed to send alert to Teams."
+                  f"Status code: {response.status_code}")
     except requests.exceptions.RequestException as e:
         print(f"Error sending alert to Teams: {e}")
-
-
-# def save_file(**kwargs):
-#     file_path = kwargs['ti'].xcom_pull(key='file_path', task_ids='read_data')
-#     data_quality = kwargs['ti'].xcom_pull(key='data_quality', task_ids='validate_data')
-#     df = pd.read_csv(file_path)
-
-#     if data_quality == 'good_data':
-#         df.to_csv(os.path.join(good_data_path, os.path.basename(file_path)), index=False)
-#     else:
-#         df.to_csv(os.path.join(bad_data_path, os.path.basename(file_path)), index=False)
-
-#     os.remove(file_path)
 
 
 def save_file(**kwargs):
@@ -219,7 +224,7 @@ def save_file(**kwargs):
                  (this might need adjustment
                  based on actual data structure) '''
                 for value in result["result"]["partial_unexpected_list"]:
-                    '''Find all occurrences of this 
+                    '''Find all occurrences of this
                     unexpected value in the specified column'''
                     index_list = df.index[
                         df[result["expectation_config"]["kwargs"]
@@ -263,12 +268,13 @@ def save_data_errors(**kwargs):
         key="bad_rows_indices_len", task_ids="send_alerts"
     )
     error_details = {
-        result["expectation_config"]["expectation_type"]: result["result"][
-            "unexpected_count"
-        ]
+        result["expectation_config"]["expectation_type"]: result["result"].get(
+            "unexpected_count", 0  # Assuming '0' as a sensible default
+        )
         for result in validation_results["results"]
         if not result["success"]
     }
+
     db_connection_string = "postgresql://car:password@34.16.139.133/carprice"
     engine = create_engine(db_connection_string)
 
@@ -316,7 +322,7 @@ default_args = {
 dag = DAG(
     "data_ingestion_pipelines",
     default_args=default_args,
-    schedule="@daily",
+    schedule_interval="* * * * *",
     catchup=False,
 )
 
@@ -328,17 +334,12 @@ read_data_task = PythonOperator(
     dag=dag,
 )
 
-validate_data_task = PythonOperator(
+validate_data_task = BranchPythonOperator(
     task_id="validate_data",
     python_callable=validate_data,
     dag=dag,
 )
-branch_task = BranchPythonOperator(
-    task_id="branch_based_on_validation",
-    python_callable=decide_which_path,
-    provide_context=True,
-    dag=dag,
-)
+
 
 send_alerts_task = PythonOperator(
     task_id="send_alerts",
@@ -363,7 +364,7 @@ save_data_errors_task = PythonOperator(
     trigger_rule="all_success",
 )
 
-read_data_task >> validate_data_task >> branch_task
-branch_task >> save_file_task
-branch_task >> send_alerts_task
-branch_task >> save_data_errors_task
+read_data_task >> validate_data_task
+validate_data_task >> save_file_task
+validate_data_task >> send_alerts_task
+validate_data_task >> save_data_errors_task

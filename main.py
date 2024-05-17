@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
+from datetime import datetime
 import sql_app.models as models
 
 from car_price.inference import make_predictions
@@ -85,9 +85,8 @@ async def make_prediction(
         # Convert list of Pydantic models to list of dictionaries
         df = pd.DataFrame(vehicle_data.data)
         predictions = make_predictions(df)
-        today = pd.to_datetime("today").date()
         df["predicted_price"] = predictions
-        df["timestamp"] = today
+        df["timestamp"] = datetime.now()
         df["year"] = df["year"].astype(int)
         df["source"] = source
         df = df[
@@ -110,7 +109,7 @@ async def make_prediction(
         df.to_sql("car_details", engine, if_exists="append", index=False)
         print("df is", df)
         df["timestamp"] = df["timestamp"].apply(
-            lambda x: x.strftime("%Y-%m-%d"))
+            lambda x: x.strftime('%Y-%m-%dT%H:%M:%S'))
         df_dict = df.to_dict(
             orient="records"
         )
